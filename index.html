@@ -5,7 +5,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body onload="init()">
     <div id="quickLinks">
         <div class="heading" onclick="toggleLinks()">
             <span>Quick Links</span>
@@ -47,57 +47,66 @@
         </ul>
     </div>
 
-    <div id="searchBar">
-        <span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-search">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input placeholder="Search">
-        </span>
-        <button>Search</button>
-    </div>
+    <div id="container">
+        <div id="searchBar">
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-search">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input placeholder="Search" id="search">
+            </span>
+            <button>Search</button>
+        </div>
 
-    <ul id="suggestions">
-        <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-clock">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Suggestion</span>
-        </li>
-        <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-clock">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Suggestion</span>
-        </li>
-        <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-clock">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Suggestion</span>
-        </li>
-    </ul>
+        <ul id="suggestions">
+        </ul>
+    </div>
 </body>
 
 <script lang="js">
     let list = document.getElementById('quickLinks').getElementsByTagName('ul')[0];
+    let prevVal = "";
+    let request;
 
     document.getElementsByTagName('body')[0].addEventListener('click', (ev) =>
     {
         if (!(ev.target.parentElement.id == 'quickLinks' && ev.target.classList.contains('heading'))) hideLinks();
     })
+
+    document.getElementById("search").addEventListener("keydown", (e) =>
+    {
+        if (e.key == "Enter")
+        {
+            search();
+        }
+    })
+
+    document.getElementById("search").addEventListener('input', getSuggestions);
+    document.getElementById("search").addEventListener('click', getSuggestions);
+
+    let lastQ = new Date();
+    let qTimeout;
+    function getSuggestions()
+    {
+        clearTimeout(qTimeout);
+        prevVal = document.getElementById("search").value;
+        let d = new Date().getTime() - lastQ.getTime();
+        if (d > 1000)
+        {
+            lastQ = new Date();
+            bingAutosuggest(document.getElementById("search").value, getSubscriptionKey());
+        }
+        else
+        {
+            qTimeout = setTimeout(() =>
+            {
+                bingAutosuggest(document.getElementById("search").value, getSubscriptionKey());
+            }, 1000 - d);
+        }
+    }
 
     function toggleLinks()
     {
@@ -107,5 +116,176 @@
     function hideLinks()
     {
         list.classList.remove('expanded');
+    }
+
+    function init()
+    {
+        document.getElementById('search').focus();
+        getSubscriptionKey();
+    }
+
+    function showMenu()
+    {
+        document.getElementById("menu").classList.toggle("hidden");
+    }
+
+    function search()
+    {
+        window.open(`https://duckduckgo.com/?t=ffab&q=${document.getElementById("search").value}&ia=web`, "_self");
+    }
+
+    getSubscriptionKey = function()
+    {
+        var COOKIE = "bing-autosuggest-api-key";   // name used to store API key in key/value storage
+
+        function findCookie(name)
+        {
+            var cookies = document.cookie.split(";");
+            for (var i = 0; i < cookies.length; i++)
+            {
+                var keyvalue = cookies[i].split("=");
+                if (keyvalue[0].trim() === name)
+                {
+                    return keyvalue[1];
+                }
+            }
+            return "";
+        }
+
+        function getSubscriptionKeyCookie()
+        {
+            var key = findCookie(COOKIE);
+            while (key.length !== 32)
+            {
+                key = prompt("Enter Bing Autosuggest API subscription key:", "").trim();
+                var expiry = new Date();
+                expiry.setFullYear(expiry.getFullYear() + 2);
+                document.cookie = COOKIE + "=" + key.trim() + "; expires=" + expiry.toUTCString();
+            }
+            return key;
+        }
+
+        function getSubscriptionKeyLocalStorage()
+        {
+            var key = localStorage.getItem(COOKIE) || "";
+            while (key.length !== 32)
+                key = prompt("Enter Bing Autosuggest API subscription key:", "").trim();
+            localStorage.setItem(COOKIE, key)
+            return key;
+        }
+
+        function getSubscriptionKey(invalidate)
+        {
+            if (invalidate)
+            {
+                try
+                {
+                    localStorage.removeItem(COOKIE);
+                }
+                catch (e)
+                {
+                    document.cookie = COOKIE + "=";
+                }
+            }
+            else
+            {
+                try
+                {
+                    return getSubscriptionKeyLocalStorage();
+                }
+                catch (e)
+                {
+                    return getSubscriptionKeyCookie();
+                }
+            }
+        }
+
+        return getSubscriptionKey;
+
+    }();
+
+    function bingAutosuggest(query, key)
+    {
+        var endpoint = "https://api.bing.microsoft.com/v7.0/suggestions";
+
+        request = new XMLHttpRequest();
+
+        try
+        {
+            request.open("GET", endpoint + "?q=" + encodeURIComponent(query));
+        }
+        catch (e)
+        {
+            renderErrorMessage("Bad request");
+            return false;
+        }
+
+        request.setRequestHeader("Ocp-Apim-Subscription-Key", key);
+
+        request.addEventListener("load", function()
+        {
+            if (this.status === 200)
+            {
+                renderSearchResults(JSON.parse(this.responseText));
+            }
+            else
+            {
+                if (this.status === 401) getSubscriptionKey(true);
+                renderErrorMessage(this.statusText, this.status);
+            }
+        });
+
+        request.addEventListener("error", function()
+        {
+            renderErrorMessage("Network error");
+        });
+
+        request.addEventListener("abort", function()
+        {
+            renderErrorMessage("Request aborted");
+        });
+
+        request.send();
+        return false;
+    }
+
+    function renderSearchResults(results)
+    {
+        let s = document.getElementById("suggestions");
+        s.innerHTML = "";
+
+        let suggestions = results.suggestionGroups[0].searchSuggestions;
+
+        if (suggestions.length > 5)
+        {
+            suggestions.splice(5, suggestions.length - 5);
+        }
+
+        suggestions.forEach(el =>
+        {
+            let li = document.createElement('li');
+            let span = document.createElement('span');
+            span.innerHTML = el.displayText;
+
+            li.addEventListener('mouseover', () =>
+            {
+                document.getElementById("search").value = el.displayText;
+            })
+
+            li.addEventListener('mouseout', () =>
+            {
+                document.getElementById("search").value = prevVal;
+            })
+            li.append(span);
+            s.append(li);
+        });
+    }
+
+    function renderErrorMessage(message, code)
+    {
+        if (code)
+            console.error(code + ": " + message);
+        else
+            console.error(message);
     }
 </script>

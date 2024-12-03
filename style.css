@@ -87,6 +87,16 @@ body
     }
 }
 
+#container
+{
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    align-items: center;
+    gap: 10px;
+    min-height: 320px;
+}
+
 #searchBar
 {
     display: flex;
@@ -96,7 +106,6 @@ body
     padding: 10px;
     border-radius: 15px;
     justify-content: space-between;
-    position: absolute;
 
     &>span
     {
@@ -152,8 +161,9 @@ body
     padding: 0px 5px;
     overflow: hidden;
     transition: 0.3s;
-    position: relative;
-    top: 110px;
+    /* position: relative; */
+    /* top: 110px; */
+    margin: 0;
 
     li
     {
