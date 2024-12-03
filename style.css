@@ -11,6 +11,11 @@ body
     font-family: 'Kumbh sans', sans-serif;
 }
 
+::selection
+{
+    background-color: #b1cdbc77;
+}
+
 #quickLinks
 {
     display: flex;
@@ -140,7 +145,7 @@ body
     }
 }
 
-#searchBar:has(> span > input:focus)+#suggestions
+#searchBar:has(> span > input:focus)+#suggestions:has(li)
 {
     max-height: 100vh;
     padding: 5px;

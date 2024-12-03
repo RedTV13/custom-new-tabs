@@ -58,7 +58,7 @@
                 </svg>
                 <input placeholder="Search" id="search">
             </span>
-            <button>Search</button>
+            <button onclick="search()">Search</button>
         </div>
 
         <ul id="suggestions">
@@ -276,6 +276,11 @@
             {
                 document.getElementById("search").value = prevVal;
             })
+            
+            li.addEventListener('click', () => {
+                search()
+            })
+            
             li.append(span);
             s.append(li);
         });
