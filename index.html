@@ -57,6 +57,7 @@
 
 <script lang="js">
     lucide.createIcons();
+    import stringSimilarity from "string-similarity-js.ts";
 
     let list = document.getElementById('quickLinks').getElementsByTagName('ul')[0];
     let prevVal = "";
@@ -81,16 +82,13 @@
 
     let lastQ = new Date();
     let qTimeout;
-    function getSuggestions()
+    async function getSuggestions()
     {
         clearTimeout(qTimeout);
         prevVal = document.getElementById("search").value;
         let d = new Date().getTime() - lastQ.getTime();
 
-        if (document.getElementById("search").value == '')
-        {
-            showRecents()
-        }
+        await showRecents();
 
         if (d > 1000)
         {
@@ -108,7 +106,15 @@
 
     function showRecents()
     {
-        recents.forEach(el =>
+        let list = recents.filter((e) => e.toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
+        list.sort((a, b) =>
+        {
+            return -1 + ((1 - -1) * (stringSimilarity(a, b) - 0)) / (1 - 0);
+        });
+        console.log('before splice:', list);
+        list.splice(2);
+        console.log('after splice:', list);
+        list.forEach(el =>
         {
             let li = document.createElement('li');
             let i = document.createElement('i');
@@ -166,7 +172,6 @@
     {
         let q = document.getElementById("search").value;
         recents.push(q);
-        if (recents.length > 3) recents.shift();
         window.localStorage.setItem('recents', JSON.stringify(recents));
         window.open(`https://duckduckgo.com/?t=ffab&q=${q}&ia=web`, "_self");
     }
