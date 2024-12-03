@@ -36,6 +36,11 @@ body
         justify-content: space-between;
         cursor: pointer;
 
+        *
+        {
+            pointer-events: none;
+        }
+
         svg
         {
             transition: 0.3s;
@@ -78,6 +83,8 @@ body
             border-radius: 5px;
             align-items: center;
             cursor: pointer;
+            color: #000000;
+            text-decoration: none;
 
             &:hover
             {

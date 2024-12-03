@@ -3,45 +3,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body onload="init()">
     <div id="quickLinks">
         <div class="heading" onclick="toggleLinks()">
             <span>Quick Links</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-chevron-down">
-                <path d="m6 9 6 6 6-6" />
-            </svg>
+            <i data-lucide="chevron-down"></i>
         </div>
 
         <ul>
             <li>
-                <a>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#B1CDBC"
-                        class="lucide lucide-circle">
-                        <circle cx="12" cy="12" r="10" />
-                    </svg>
-                    <span>Link</span>
+                <a href="https://www.youtube.com/">
+                    <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
+                    <span>Youtube</span>
                 </a>
             </li>
             <li>
-                <a>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#B1CDBC"
-                        class="lucide lucide-circle">
-                        <circle cx="12" cy="12" r="10" />
-                    </svg>
-                    <span>Link</span>
+                <a href="https://www.disneyplus.com/en-gb/home">
+                    <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
+                    <span>Disney+</span>
                 </a>
             </li>
             <li>
-                <a>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#B1CDBC"
-                        class="lucide lucide-circle">
-                        <circle cx="12" cy="12" r="10" />
-                    </svg>
-                    <span>Link</span>
+                <a href="https://my.gov.au/en/myaccount/dashboard/">
+                    <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
+                    <span>myGov</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/RedTV13/RedTV13.github.io">
+                    <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
+                    <span>GitHub</span>
                 </a>
             </li>
         </ul>
@@ -50,12 +44,7 @@
     <div id="container">
         <div id="searchBar">
             <span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-search">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                </svg>
+                <i data-lucide="search"></i>
                 <input placeholder="Search" id="search">
             </span>
             <button onclick="search()">Search</button>
@@ -67,9 +56,12 @@
 </body>
 
 <script lang="js">
+    lucide.createIcons();
+
     let list = document.getElementById('quickLinks').getElementsByTagName('ul')[0];
     let prevVal = "";
     let request;
+    let recents = [];
 
     document.getElementsByTagName('body')[0].addEventListener('click', (ev) =>
     {
@@ -94,6 +86,12 @@
         clearTimeout(qTimeout);
         prevVal = document.getElementById("search").value;
         let d = new Date().getTime() - lastQ.getTime();
+
+        if (document.getElementById("search").value == '')
+        {
+            showRecents()
+        }
+
         if (d > 1000)
         {
             lastQ = new Date();
@@ -108,6 +106,39 @@
         }
     }
 
+    function showRecents()
+    {
+        recents.forEach(el => {
+            let li = document.createElement('li');
+            let i = document.createElement('i');
+            let span = document.createElement('span');
+            span.innerHTML = el;
+
+            i.setAttribute('data-lucide', 'clock');
+            i.setAttribute('width', '18');
+
+            li.addEventListener('mouseover', () =>
+            {
+                document.getElementById("search").value = el;
+            })
+
+            li.addEventListener('mouseout', () =>
+            {
+                document.getElementById("search").value = prevVal;
+            })
+
+            li.addEventListener('click', () =>
+            {
+                search()
+            })
+
+            li.append(i);
+            li.append(span);
+            s.append(li);
+        })
+        lucide.createIcons();
+    }
+
     function toggleLinks()
     {
         list.classList.toggle('expanded');
@@ -120,6 +151,7 @@
 
     function init()
     {
+        recents = JSON.parse(window.localStorage.getItem('recents')) || [];
         document.getElementById('search').focus();
         getSubscriptionKey();
     }
@@ -131,7 +163,10 @@
 
     function search()
     {
-        window.open(`https://duckduckgo.com/?t=ffab&q=${document.getElementById("search").value}&ia=web`, "_self");
+        let q = document.getElementById("search").value;
+        recents.push(q);
+        if (recents.length > 3) recents.shift();
+        window.open(`https://duckduckgo.com/?t=ffab&q=${q}&ia=web`, "_self");
     }
 
     getSubscriptionKey = function()
@@ -264,8 +299,12 @@
         suggestions.forEach(el =>
         {
             let li = document.createElement('li');
+            let i = document.createElement('i');
             let span = document.createElement('span');
             span.innerHTML = el.displayText;
+
+            i.setAttribute('data-lucide', 'search');
+            i.setAttribute('width', '18');
 
             li.addEventListener('mouseover', () =>
             {
@@ -276,14 +315,18 @@
             {
                 document.getElementById("search").value = prevVal;
             })
-            
-            li.addEventListener('click', () => {
+
+            li.addEventListener('click', () =>
+            {
                 search()
             })
-            
+
+            li.append(i);
             li.append(span);
             s.append(li);
         });
+
+        lucide.createIcons();
     }
 
     function renderErrorMessage(message, code)
