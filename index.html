@@ -108,7 +108,8 @@
 
     function showRecents()
     {
-        recents.forEach(el => {
+        recents.forEach(el =>
+        {
             let li = document.createElement('li');
             let i = document.createElement('i');
             let span = document.createElement('span');
@@ -166,6 +167,7 @@
         let q = document.getElementById("search").value;
         recents.push(q);
         if (recents.length > 3) recents.shift();
+        window.localStorage.setItem('recents', JSON.stringify(recents));
         window.open(`https://duckduckgo.com/?t=ffab&q=${q}&ia=web`, "_self");
     }
 
