@@ -4,7 +4,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@100..900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="string-similarity-js.ts"></script>
+    <link rel="icon" href="favicon.ico">
+    
 </head>
 
 <body onload="init()">
@@ -57,7 +58,6 @@
 </body>
 
 <script lang="js">
-    // import stringSimilarity from "string-similarity-js.ts";
     lucide.createIcons();
 
     let list = document.getElementById('quickLinks').getElementsByTagName('ul')[0];
@@ -83,13 +83,11 @@
 
     let lastQ = new Date();
     let qTimeout;
-    async function getSuggestions()
+    function getSuggestions()
     {
         clearTimeout(qTimeout);
         prevVal = document.getElementById("search").value;
         let d = new Date().getTime() - lastQ.getTime();
-
-        await showRecents();
 
         if (d > 1000)
         {
@@ -107,27 +105,29 @@
 
     function showRecents()
     {
-        let list = recents.filter((e) => e.toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
+        let s = document.getElementById("suggestions");
+        let list = recents.filter((e) => e.val.toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
         list.sort((a, b) =>
         {
-            return -1 + ((1 - -1) * (stringSimilarity(a, b) - 0)) / (1 - 0);
+            let val = document.getElementById("search").value;
+            let asim = stringSimilarity(a.val, val);
+            let bsim = stringSimilarity(b.val, val);
+            return asim - bsim;
         });
-        console.log('before splice:', list);
         list.splice(2);
-        console.log('after splice:', list);
         list.forEach(el =>
         {
             let li = document.createElement('li');
             let i = document.createElement('i');
             let span = document.createElement('span');
-            span.innerHTML = el;
+            span.innerHTML = el.val;
 
             i.setAttribute('data-lucide', 'clock');
             i.setAttribute('width', '18');
 
-            li.addEventListener('mouseover', () =>
+            li.addEventListener('mouseenter', () =>
             {
-                document.getElementById("search").value = el;
+                document.getElementById("search").value = el.val;
             })
 
             li.addEventListener('mouseout', () =>
@@ -145,6 +145,7 @@
             s.append(li);
         })
         lucide.createIcons();
+        return list.length;
     }
 
     function toggleLinks()
@@ -160,6 +161,12 @@
     function init()
     {
         recents = JSON.parse(window.localStorage.getItem('recents')) || [];
+        recents.forEach((el) => el.date = new Date(el.date));
+        recents = recents.filter((el) =>
+        {
+            let now = new Date();
+            return el.date.getTime() > new Date(new Date().setDate(now.getDate() - 3))
+        })
         document.getElementById('search').focus();
         getSubscriptionKey();
     }
@@ -171,11 +178,47 @@
 
     function search()
     {
-        let q = document.getElementById("search").value;
+        let q = {
+            val: document.getElementById("search").value,
+            date: new Date()
+        };
         recents.push(q);
         window.localStorage.setItem('recents', JSON.stringify(recents));
-        window.open(`https://duckduckgo.com/?t=ffab&q=${q}&ia=web`, "_self");
+        window.open(`https://duckduckgo.com/?t=ffab&q=${q.val}&ia=web`, "_self");
     }
+
+    const stringSimilarity = (str1, str2, substringLength = 2, caseSensitive = false) =>
+    {
+        if (!caseSensitive)
+        {
+            str1 = str1.toLowerCase();
+            str2 = str2.toLowerCase();
+        }
+
+        if (str1.length < substringLength || str2.length < substringLength)
+            return 0;
+
+        const map = new Map();
+        for (let i = 0; i < str1.length - (substringLength - 1); i++)
+        {
+            const substr1 = str1.slice(i, substringLength);
+            map.set(substr1, map.has(substr1) ? map.get(substr1) + 1 : 1);
+        }
+
+        let match = 0;
+        for (let j = 0; j < str2.length - (substringLength - 1); j++)
+        {
+            const substr2 = str2.slice(j, substringLength);
+            const count = map.has(substr2) ? map.get(substr2) : 0;
+            if (count > 0)
+            {
+                map.set(substr2, count - 1);
+                match++;
+            }
+        }
+
+        return (match * 2) / (str1.length + str2.length - ((substringLength - 1) * 2));
+    };
 
     getSubscriptionKey = function()
     {
@@ -292,16 +335,19 @@
         return false;
     }
 
-    function renderSearchResults(results)
+    async function renderSearchResults(results)
     {
         let s = document.getElementById("suggestions");
         s.innerHTML = "";
 
-        let suggestions = results.suggestionGroups[0].searchSuggestions;
+        let recentsLength = await showRecents();
 
-        if (suggestions.length > 5)
+        let suggestions = results.suggestionGroups[0].searchSuggestions;
+        suggestions = suggestions.slice(0, 5);
+
+        if (suggestions.length + recentsLength > 5)
         {
-            suggestions.splice(5, suggestions.length - 5);
+            suggestions = suggestions.slice(0, suggestions.length - recentsLength || 0)
         }
 
         suggestions.forEach(el =>
