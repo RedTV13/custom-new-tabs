@@ -352,7 +352,7 @@
 
         suggestions.forEach(el =>
         {
-            if (!recents.some((e) => { e.val.toLowerCase() == el.displayText.toLowerCase() }))
+            if (!recents.some((e) => { return e.val.toLowerCase() == el.displayText.toLowerCase() }))
             {
                 let li = document.createElement('li');
                 let i = document.createElement('i');
