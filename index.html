@@ -5,7 +5,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@100..900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="favicon.ico">
-    
+
 </head>
 
 <body onload="init()">
@@ -352,32 +352,35 @@
 
         suggestions.forEach(el =>
         {
-            let li = document.createElement('li');
-            let i = document.createElement('i');
-            let span = document.createElement('span');
-            span.innerHTML = el.displayText;
-
-            i.setAttribute('data-lucide', 'search');
-            i.setAttribute('width', '18');
-
-            li.addEventListener('mouseover', () =>
+            if (recents.some((e) => { e.val.toLowerCase() != e.displayText.toLowerCase() }))
             {
-                document.getElementById("search").value = el.displayText;
-            })
+                let li = document.createElement('li');
+                let i = document.createElement('i');
+                let span = document.createElement('span');
+                span.innerHTML = el.displayText;
 
-            li.addEventListener('mouseout', () =>
-            {
-                document.getElementById("search").value = prevVal;
-            })
+                i.setAttribute('data-lucide', 'search');
+                i.setAttribute('width', '18');
 
-            li.addEventListener('click', () =>
-            {
-                search()
-            })
+                li.addEventListener('mouseover', () =>
+                {
+                    document.getElementById("search").value = el.displayText;
+                })
 
-            li.append(i);
-            li.append(span);
-            s.append(li);
+                li.addEventListener('mouseout', () =>
+                {
+                    document.getElementById("search").value = prevVal;
+                })
+
+                li.addEventListener('click', () =>
+                {
+                    search()
+                })
+
+                li.append(i);
+                li.append(span);
+                s.append(li);
+            }
         });
 
         lucide.createIcons();
