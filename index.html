@@ -16,7 +16,7 @@
         </div>
 
         <ul>
-            <li>
+            <!-- <li>
                 <a href="https://www.youtube.com/">
                     <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
                     <span>Youtube</span>
@@ -39,9 +39,29 @@
                     <i data-lucide="circle" fill="#B1CDBC" stroke="none" width="10"></i>
                     <span>GitHub</span>
                 </a>
+            </li> -->
+            <li onclick="newQuickLink()" id="newLinkBtn">
+                <div id="nql">
+                    <i data-lucide="plus" width="20"></i>
+                    <span>New Quick Link</span>
+                </div>
             </li>
         </ul>
     </div>
+
+    <dialog id="modal">
+        <form method="dialog">
+            <button class="close" type="submit">
+                <i data-lucide="x"></i>
+            </button>
+        </form>
+        <div class="content">
+            <h3>New quick link</h3>
+            <input placeholder="Link title">
+            <input placeholder="URL" type="url">
+            <button onclick="saveLink()">Save</button>
+        </div>
+    </dialog>
 
     <div id="container">
         <div id="searchBar">
@@ -55,22 +75,33 @@
         <ul id="suggestions">
         </ul>
     </div>
+
+    <ul id="contextMenu">
+        <li onclick="editLink(event)">Edit link</li>
+        <li onclick="deleteLink(event)">Delete link</li>
+    </ul>
 </body>
 
 <script lang="js">
     lucide.createIcons();
 
     let list = document.getElementById('quickLinks').getElementsByTagName('ul')[0];
+    let searchInput = document.getElementById("search");
+    let modal = document.getElementById('modal');
+    let ctxMenu = document.getElementById('contextMenu');
     let prevVal = "";
     let request;
     let recents = [];
+    let quickLinks = [];
+    let linkID;
 
     document.getElementsByTagName('body')[0].addEventListener('click', (ev) =>
     {
+        contextMenu.classList.remove('expanded');
         if (!(ev.target.parentElement.id == 'quickLinks' && ev.target.classList.contains('heading'))) hideLinks();
     })
 
-    document.getElementById("search").addEventListener("keydown", (e) =>
+    searchInput.addEventListener("keydown", (e) =>
     {
         if (e.key == "Enter")
         {
@@ -78,27 +109,38 @@
         }
     })
 
-    document.getElementById("search").addEventListener('input', getSuggestions);
-    document.getElementById("search").addEventListener('click', getSuggestions);
+    searchInput.addEventListener('input', getSuggestions);
+    searchInput.addEventListener('click', getSuggestions);
+
+    Array.from(modal.getElementsByClassName('content')[0].getElementsByTagName('input')).forEach(el =>
+    {
+        el.addEventListener('keydown', (e) =>
+        {
+            if (e.key == "Enter")
+            {
+                saveLink();
+            }
+        })
+    })
 
     let lastQ = new Date();
     let qTimeout;
     function getSuggestions()
     {
         clearTimeout(qTimeout);
-        prevVal = document.getElementById("search").value;
+        prevVal = searchInput.value;
         let d = new Date().getTime() - lastQ.getTime();
 
         if (d > 1000)
         {
             lastQ = new Date();
-            bingAutosuggest(document.getElementById("search").value, getSubscriptionKey());
+            bingAutosuggest(searchInput.value, getSubscriptionKey());
         }
         else
         {
             qTimeout = setTimeout(() =>
             {
-                bingAutosuggest(document.getElementById("search").value, getSubscriptionKey());
+                bingAutosuggest(searchInput.value, getSubscriptionKey());
             }, 1000 - d);
         }
     }
@@ -106,10 +148,10 @@
     function showRecents()
     {
         let s = document.getElementById("suggestions");
-        let list = recents.filter((e) => e.val.toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
+        let list = recents.filter((e) => e.val.toLowerCase().includes(searchInput.value.toLowerCase()));
         list.sort((a, b) =>
         {
-            let val = document.getElementById("search").value;
+            let val = searchInput.value;
             let asim = stringSimilarity(a.val, val);
             let bsim = stringSimilarity(b.val, val);
             return asim - bsim;
@@ -127,12 +169,12 @@
 
             li.addEventListener('mouseenter', () =>
             {
-                document.getElementById("search").value = el.val;
+                searchInput.value = el.val;
             })
 
             li.addEventListener('mouseout', () =>
             {
-                document.getElementById("search").value = prevVal;
+                searchInput.value = prevVal;
             })
 
             li.addEventListener('click', () =>
@@ -167,7 +209,11 @@
             let now = new Date();
             return el.date.getTime() > new Date(new Date().setDate(now.getDate() - 3))
         })
-        document.getElementById('search').focus();
+        quickLinks = JSON.parse(window.localStorage.getItem('quickLinks')) || [];
+        renderQuickLinks();
+        renderQuickLinks();
+
+        searchInput.focus();
         getSubscriptionKey();
     }
 
@@ -179,7 +225,7 @@
     function search()
     {
         let q = {
-            val: document.getElementById("search").value,
+            val: searchInput.value,
             date: new Date()
         };
         recents.push(q);
@@ -364,12 +410,12 @@
 
                 li.addEventListener('mouseover', () =>
                 {
-                    document.getElementById("search").value = el.displayText;
+                    searchInput.value = el.displayText;
                 })
 
                 li.addEventListener('mouseout', () =>
                 {
-                    document.getElementById("search").value = prevVal;
+                    searchInput.value = prevVal;
                 })
 
                 li.addEventListener('click', () =>
@@ -392,5 +438,103 @@
             console.error(code + ": " + message);
         else
             console.error(message);
+    }
+
+    function newQuickLink()
+    {
+        modal.showModal();
+    }
+
+    function saveLink()
+    {
+        let [title, urlInp] = modal.getElementsByTagName('input');
+        if (title.value !== "" && urlInp.value !== "")
+        {
+            let url = urlInp.value;
+            if (!url.startsWith('http')) url = "https://" + url;
+            quickLinks.push({
+                title: title.value,
+                url: url,
+                id: new Date().getTime()
+            });
+            localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
+            title.value = "";
+            urlInp.value = "";
+            renderQuickLinks();
+            modal.close();
+        }
+    }
+
+    function renderQuickLinks()
+    {
+        let l = Array.from(list.getElementsByTagName('li'));
+        Array.from(l).forEach((el, i) =>
+        {
+            if (el.id !== "newLinkBtn")
+            {
+                el.remove();
+            }
+        })
+
+        quickLinks.forEach((link) =>
+        {
+            let li = document.createElement('li');
+            let a = document.createElement('a');
+            let i = document.createElement('i');
+            let span = document.createElement('span');
+
+            a.href = link.url;
+
+            i.setAttribute("data-lucide", "circle");
+            i.setAttribute("fill", "#B1CDBC");
+            i.setAttribute("stroke", "none");
+            i.setAttribute("width", "10");
+
+            span.innerHTML = link.title;
+
+            a.append(i);
+            a.append(span);
+
+            li.append(a);
+            li.id = link.id.toString();
+            li.oncontextmenu = (e) =>
+            {
+                e.preventDefault();
+                linkID = e.target.parentElement.id;
+                contextMenu.style.left = e.clientX + 'px';
+                contextMenu.style.top = e.clientY + 'px';
+                contextMenu.classList.add('expanded');
+            }
+
+            list.insertBefore(li, document.getElementById('newLinkBtn'));
+        })
+        lucide.createIcons();
+    }
+
+    function editLink(e)
+    {
+        let [titleInpt, urlInpt] = modal.getElementsByTagName('input');
+        let link = quickLinks.filter(e => e.id == linkID)[0];
+        titleInpt.value = link.title;
+        urlInpt.value = link.url;
+        modal.getElementsByTagName('button')[1].onclick = (e) => {
+            let link = quickLinks.filter(e => e.id == linkID)[0];
+            link.title = titleInpt.value;
+            link.url = urlInpt.value;
+            window.localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
+            renderQuickLinks();
+            modal.close();
+            title.value = "";
+            urlInp.value = "";
+            modal.getElementsByTagName('button')[1].onclick = saveLink;
+        };
+        modal.showModal();
+    }
+
+    function deleteLink(e)
+    {
+        quickLinks.splice(quickLinks.findIndex(e => e.id == linkID), 1);
+        window.localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
+        renderQuickLinks();
     }
 </script>
