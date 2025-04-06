@@ -70,6 +70,7 @@
     let recents = [];
     let quickLinks = [];
     let linkID;
+    const primaryColor = "rgb(204, 187, 255)"
 
     document.getElementsByTagName('body')[0].addEventListener('click', (ev) =>
     {
@@ -463,7 +464,7 @@
             a.href = link.url;
 
             i.setAttribute("data-lucide", "circle");
-            i.setAttribute("fill", "#B1CDBC");
+            i.setAttribute("fill", primaryColor);
             i.setAttribute("stroke", "none");
             i.setAttribute("width", "10");
 
