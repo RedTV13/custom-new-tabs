@@ -1,3 +1,11 @@
+:root
+{
+    --primary-color: rgb(204, 187, 255);
+    --primary-color-75: rgba(204, 187, 255, 0.75);
+    --primary-color-50: rgba(204, 187, 255, 0.5);
+    --primary-color-25: rgba(204, 187, 255, 0.25);
+}
+
 body
 {
     width: 100vw;
@@ -8,12 +16,14 @@ body
     align-items: center;
     justify-content: center;
     background-color: #b1cdbc33;
+    background-color: var(--primary-color-25);
     font-family: 'Kumbh sans', sans-serif;
 }
 
 ::selection
 {
     background-color: #b1cdbc77;
+    background-color: var(--primary-color-50);
 }
 
 #quickLinks
@@ -98,11 +108,13 @@ body
             &:hover
             {
                 background-color: #b1cdbc33;
+                background-color: var(--primary-color-25);
             }
 
             &:active
             {
                 background-color: #b1cdbc77;
+                background-color: var(--primary-color-50);
             }
         }
     }
@@ -160,12 +172,14 @@ body
             padding: 10px;
             border-radius: 10px;
             background-color: #b1cdbcbf;
+            background-color: var(--primary-color-50);
             border: none;
             cursor: pointer;
 
             &:active
             {
                 background-color: #b1cdbc;
+                background-color: var(--primary-color-75);
             }
         }
     }
@@ -174,6 +188,7 @@ body
 ::backdrop
 {
     background-color: #b1cdbc30;
+    background-color: var(--primary-color-25);
     backdrop-filter: blur(2px);
 }
 
@@ -220,12 +235,14 @@ body
         padding: 10px;
         border-radius: 10px;
         background-color: #b1cdbcbf;
+        background-color: var(--primary-color-75);
         border: none;
         cursor: pointer;
 
         &:active
         {
             background-color: #b1cdbc;
+            background-color: var(--primary-color);
         }
     }
 }
@@ -269,11 +286,13 @@ body
         &:hover
         {
             background-color: #b1cdbc33;
+            background-color: var(--primary-color-25);
         }
 
         &:active
         {
             background-color: #b1cdbc77;
+            background-color: var(--primary-color-50);
         }
     }
 }
@@ -317,11 +336,13 @@ body
         &:hover
         {
             background-color: #b1cdbc33;
+            background-color: var(--primary-color-25);
         }
 
         &:active
         {
             background-color: #b1cdbc77;
+            background-color: var(--primary-color-50);
         }
     }
 }
